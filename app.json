@@ -1,17 +1,22 @@
 {
   "expo": {
-    "name": "mobile-lenovo-asp",
-    "slug": "mobile-lenovo-asp",
+    "name": "Lenovo ASP",
+    "slug": "miftah-ahmad-choiri",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "lenovoasp",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lenovoasp.mobile"
     },
     "android": {
+      "package": "com.lenovoasp.mobile",
+      "navigationBarColor": "#0f3460",
+      "navigationBarStyle": "light",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0F3460",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -19,7 +24,31 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-router",
+        {
+          "root": "./app"
+        }
+      ],
+      "expo-status-bar",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "root": "./app"
+      },
+      "eas": {
+        "projectId": "6deb233e-b6e6-4589-b59a-34f1300dfbaa"
+      }
+    },
+    "owner": "miftahcoiri354s-team"
   }
 }

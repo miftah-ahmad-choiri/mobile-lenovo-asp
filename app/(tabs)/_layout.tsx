@@ -1,10 +1,10 @@
 // app/(tabs)/_layout.tsx
-// 3-tab bottom navigation: Follow-Up | Return Part | Profile
+// Bottom navigation: Home | History | Profile
 
 import { Tabs } from "expo-router";
-import { View, Text, StyleSheet, Platform } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useStats } from "../../hooks/useStats";
 
 const TAB_ACTIVE   = "#e8392e";
 const TAB_INACTIVE = "#9ca3af";
@@ -12,15 +12,19 @@ const TAB_BG       = "#ffffff";
 const BORDER_COLOR = "#e5e7eb";
 
 interface TabIconProps {
-  emoji: string;
+  name: React.ComponentProps<typeof Feather>["name"];
   focused: boolean;
   badge?: number;
 }
 
-function TabIcon({ emoji, focused, badge }: TabIconProps) {
+function TabIcon({ name, focused, badge }: TabIconProps) {
   return (
     <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-      <Text style={styles.emoji}>{emoji}</Text>
+      <Feather
+        name={name}
+        size={22}
+        color={focused ? TAB_ACTIVE : TAB_INACTIVE}
+      />
       {badge != null && badge > 0 && (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{badge > 99 ? "99+" : badge}</Text>
@@ -42,10 +46,6 @@ const styles = StyleSheet.create({
   },
   iconWrapActive: {
     backgroundColor: "rgba(232,57,46,0.18)",
-  },
-  emoji: {
-    fontSize: 22,
-    lineHeight: 26,
   },
   activeDot: {
     width: 4,
@@ -77,9 +77,7 @@ const styles = StyleSheet.create({
 });
 
 export default function TabsLayout() {
-  const insets      = useSafeAreaInsets();
-  const { stats, followupTotal } = useStats();
-  const returnTotal = stats?.return_part_total ?? 0;
+  const insets = useSafeAreaInsets();
 
   // Extra padding above Android navigation bar (back/home/menu)
   const bottomPad = Math.max(insets.bottom, 8);
@@ -109,22 +107,22 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="followup"
+        name="home"
         options={{
-          title: "Follow-Up",
+          title: "Home",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="📋" focused={focused} badge={followupTotal} />
+            <TabIcon name="home" focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
-        name="return-part"
+        name="history"
         options={{
-          title: "Return Part",
-          headerTitle: "Return Part",
+          title: "History",
+          headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="📦" focused={focused} badge={returnTotal} />
+            <TabIcon name="clock" focused={focused} />
           ),
         }}
       />
@@ -132,10 +130,51 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: "Profile",
-          headerTitle: "My Profile",
+          headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="👤" focused={focused} />
+            <TabIcon name="user" focused={focused} />
           ),
+        }}
+      />
+      {/* These screens are navigated to from the Home menu cards, not shown as tabs */}
+      <Tabs.Screen
+        name="cci"
+        options={{
+          headerTitle: "CCI Follow-Up",
+          headerStyle: { backgroundColor: "#0891b2" },
+          headerTintColor: "#ffffff",
+          headerShown: false,
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="onsite"
+        options={{
+          headerTitle: "ONS Follow-Up",
+          headerStyle: { backgroundColor: "#d97706" },
+          headerTintColor: "#ffffff",
+          headerShown: false,
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="in-prepare"
+        options={{
+          title: "In-Prepare",
+          headerTitle: "In-Prepare",
+          headerStyle: { backgroundColor: "#0f3460" },
+          headerTintColor: "#ffffff",
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="in-return"
+        options={{
+          title: "In-Return",
+          headerTitle: "Return Part",
+          headerStyle: { backgroundColor: "#7c3aed" },
+          headerTintColor: "#ffffff",
+          href: null,
         }}
       />
     </Tabs>

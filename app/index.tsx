@@ -19,7 +19,7 @@ export default function IndexScreen() {
     // Small delay so the navigator is fully mounted before replacing
     const t = setTimeout(() => {
       if (user) {
-        router.replace("/(tabs)/followup/in-prepare");
+        router.replace("/(tabs)/home");
       } else {
         router.replace("/login");
       }
@@ -60,8 +60,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 20,
   },
-  logoText:  { fontSize: 40, fontWeight: "900", color: "#fff" },
-  title:     { fontSize: 28, fontWeight: "700", color: "#fff", letterSpacing: 0.5 },
-  subtitle:  { fontSize: 14, color: "#93c5fd", marginTop: 6, marginBottom: 40 },
+  logoText:  { fontSize: 40, fontWeight: "900", fontFamily: "IBMPlexSans_700Bold", color: "#fff" },
+  title:     { fontSize: 28, fontWeight: "700", fontFamily: "IBMPlexSans_700Bold", color: "#fff", letterSpacing: 0.5 },
+  subtitle:  { fontSize: 14, fontFamily: "IBMPlexSans_400Regular", color: "#93c5fd", marginTop: 6, marginBottom: 40 },
   spinner:   { marginTop: 10 },
 });

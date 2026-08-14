@@ -130,9 +130,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 16,
   },
-  logoText: { fontSize: 36, fontWeight: "900", color: "#fff" },
-  title: { fontSize: 26, fontWeight: "700", color: "#fff", letterSpacing: 0.5 },
-  subtitle: { fontSize: 14, color: "#93c5fd", marginTop: 4 },
+  logoText: { fontSize: 36, fontWeight: "900", fontFamily: "IBMPlexSans_700Bold", color: "#fff" },
+  title: { fontSize: 26, fontWeight: "700", fontFamily: "IBMPlexSans_700Bold", color: "#fff", letterSpacing: 0.5 },
+  subtitle: { fontSize: 14, fontFamily: "IBMPlexSans_400Regular", color: "#93c5fd", marginTop: 4 },
   form: {
     backgroundColor: "#fff",
     borderRadius: 16,
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
-  label: { fontSize: 13, fontWeight: "600", color: "#374151", marginBottom: 6 },
+  label: { fontSize: 13, fontWeight: "600", fontFamily: "IBMPlexSans_600SemiBold", color: "#374151", marginBottom: 6 },
   input: {
     borderWidth: 1,
     borderColor: "#d1d5db",
@@ -150,6 +150,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
+    fontFamily: "IBMPlexSans_400Regular",
     color: "#1f2937",
     marginBottom: 16,
     backgroundColor: "#f9fafb",
@@ -162,11 +163,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   btnDisabled: { opacity: 0.6 },
-  btnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  btnText: { color: "#fff", fontSize: 16, fontWeight: "700", fontFamily: "IBMPlexSans_700Bold" },
   footer: {
     textAlign: "center",
     color: "#93c5fd",
     fontSize: 12,
+    fontFamily: "IBMPlexSans_400Regular",
     marginTop: 32,
   },
 });

@@ -119,13 +119,13 @@ export function WOScreen({ endpoint, extraParams = {}, emptyText }: Props) {
 const styles = StyleSheet.create({
   container:   { flex: 1, backgroundColor: "#f3f4f6" },
   searchBox:   { backgroundColor: "#fff", paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#e5e7eb" },
-  searchInput: { backgroundColor: "#f3f4f6", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9, fontSize: 14, color: "#111827" },
-  countText:   { fontSize: 12, color: "#6b7280", paddingHorizontal: 16, paddingVertical: 6 },
+  searchInput: { backgroundColor: "#f3f4f6", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9, fontSize: 14, fontFamily: "IBMPlexSans_400Regular", color: "#111827" },
+  countText:   { fontSize: 12, fontFamily: "IBMPlexSans_400Regular", color: "#6b7280", paddingHorizontal: 16, paddingVertical: 6 },
   centerBox:   { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
-  errorText:   { color: "#dc2626", textAlign: "center", marginBottom: 12 },
+  errorText:   { color: "#dc2626", fontFamily: "IBMPlexSans_400Regular", textAlign: "center", marginBottom: 12 },
   retryBtn:    { backgroundColor: "#0f3460", borderRadius: 8, paddingHorizontal: 20, paddingVertical: 8 },
-  retryText:   { color: "#fff", fontWeight: "600" },
-  emptyText:   { color: "#6b7280", textAlign: "center", fontSize: 15 },
+  retryText:   { color: "#fff", fontWeight: "600", fontFamily: "IBMPlexSans_600SemiBold" },
+  emptyText:   { color: "#6b7280", fontFamily: "IBMPlexSans_400Regular", textAlign: "center", fontSize: 15 },
   detailLoader: {
     ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0,0,0,0.35)",

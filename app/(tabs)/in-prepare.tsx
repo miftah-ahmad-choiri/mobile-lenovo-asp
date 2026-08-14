@@ -1,5 +1,7 @@
-// app/(tabs)/followup/in-prepare.tsx
-import { WOScreen } from "../../../components/WOScreen";
+// app/(tabs)/in-prepare.tsx
+// In-Prepare work orders screen — reached from the Home menu card.
+
+import { WOScreen } from "../../components/WOScreen";
 
 export default function InPrepareScreen() {
   return (

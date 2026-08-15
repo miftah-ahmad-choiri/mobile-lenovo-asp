@@ -14,6 +14,41 @@ import {
   Linking,
 } from "react-native";
 
+// ── Status pill colour map ────────────────────────────────────────────────────
+function statusPillColors(status: string): { bg: string; text: string; border: string } {
+  const s = status.toLowerCase();
+  if (s.includes("cancel"))                             return { bg: "#fee2e2", text: "#b91c1c", border: "#fca5a5" };
+  if (s.includes("transit") || s.includes("shipped"))  return { bg: "#dbeafe", text: "#1d4ed8", border: "#93c5fd" };
+  if (s.includes("delivered") || s.includes("complet") || s.includes("closed") || s.includes("pickup"))
+                                                        return { bg: "#dcfce7", text: "#15803d", border: "#86efac" };
+  if (s.includes("hold") || s.includes("part hold"))   return { bg: "#fef3c7", text: "#b45309", border: "#fcd34d" };
+  if (s.includes("open") || s.includes("created") || s.includes("released"))
+                                                        return { bg: "#e0e7ff", text: "#4338ca", border: "#a5b4fc" };
+  if (s.includes("reschedule"))                         return { bg: "#fef3c7", text: "#b45309", border: "#fcd34d" };
+  if (s.includes("repair"))                             return { bg: "#d1fae5", text: "#065f46", border: "#6ee7b7" };
+  return { bg: "#f3f4f6", text: "#374151", border: "#d1d5db" };
+}
+
+function StatusPill({ value }: { value: string }) {
+  const { bg, text, border } = statusPillColors(value);
+  return (
+    <View style={[pillStyles.pill, { backgroundColor: bg, borderColor: border }]}>
+      <Text style={[pillStyles.text, { color: text }]}>{value}</Text>
+    </View>
+  );
+}
+
+const pillStyles = StyleSheet.create({
+  pill: {
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    alignSelf: "flex-end",
+  },
+  text: { fontSize: 12, fontWeight: "700", fontFamily: "IBMPlexSans_700Bold" },
+});
+
 const SCREEN_H = Dimensions.get("window").height;
 
 interface Part {
@@ -114,7 +149,12 @@ export function WODetailSheet({ visible, wo, parts, onClose }: Props) {
             showsVerticalScrollIndicator={false}
           >
             <Section title="Work Order">
-              <Row label="Status"      value={wo.work_order_status} />
+              {wo.work_order_status ? (
+                <View style={styles.row}>
+                  <Text style={styles.rowLabel}>Status</Text>
+                  <StatusPill value={wo.work_order_status} />
+                </View>
+              ) : null}
               <Row label="Type"        value={wo.work_order_type} />
               <Row label="Case"        value={wo.case_desc} />
               <Row label="Case Status" value={wo.case_status} />
@@ -133,7 +173,6 @@ export function WODetailSheet({ visible, wo, parts, onClose }: Props) {
 
             <Section title="Customer">
               <Row label="Contact"  value={wo.contact_name} />
-              <Row label="ASP"      value={wo.customer} />
               <Row label="City"     value={wo.city} />
               <Row label="Phone"    value={wo.mobile_phone} phone />
               <Row label="Email"    value={wo.primary_email} />
@@ -141,19 +180,33 @@ export function WODetailSheet({ visible, wo, parts, onClose }: Props) {
 
             {parts.length > 0 && (
               <Section title={`Parts (${parts.length})`}>
-                {parts.map((p, i) => (
-                  <View key={p.soid ?? i} style={styles.partCard}>
-                    <Text style={styles.partTitle}>
-                      SOID {p.soid} — {p.product || "—"}
-                    </Text>
-                    <Text style={styles.partDesc}>{p.description || "—"}</Text>
-                    <Row label="Status"   value={p.wo_product_status} />
-                    <Row label="AWB"      value={p.awb} />
-                    <Row label="POD Date" value={p.ship_pou_pod_time?.slice(0, 10)} />
-                    <Row label="DC#"      value={p.dc_number} />
-                    <Row label="Return"   value={p.return_flag} />
-                  </View>
-                ))}
+                {[...parts]
+                  .sort((a, b) => {
+                    const aCancelled = (a.wo_product_status || "").toLowerCase().includes("cancel");
+                    const bCancelled = (b.wo_product_status || "").toLowerCase().includes("cancel");
+                    return (aCancelled ? 1 : 0) - (bCancelled ? 1 : 0);
+                  })
+                  .map((p, i) => {
+                    const isCancelled = (p.wo_product_status || "").toLowerCase().includes("cancel");
+                    return (
+                      <View key={p.soid ?? i} style={[styles.partCard, isCancelled && styles.partCardCancelled]}>
+                        <Text style={[styles.partTitle, isCancelled && styles.partTitleCancelled]}>
+                          SOID {p.soid} — {p.product || "—"}
+                        </Text>
+                        <Text style={[styles.partDesc, isCancelled && styles.partDescCancelled]}>{p.description || "—"}</Text>
+                        {p.wo_product_status ? (
+                          <View style={styles.row}>
+                            <Text style={[styles.rowLabel, isCancelled && styles.cancelledText]}>Status</Text>
+                            <StatusPill value={p.wo_product_status} />
+                          </View>
+                        ) : null}
+                        {!isCancelled && <Row label="AWB"      value={p.awb} />}
+                        {!isCancelled && <Row label="POD Date" value={p.ship_pou_pod_time?.slice(0, 10)} />}
+                        {!isCancelled && <Row label="DC#"      value={p.dc_number} />}
+                        {!isCancelled && <Row label="Return"   value={p.return_flag} />}
+                      </View>
+                    );
+                  })}
               </Section>
             )}
           </ScrollView>
@@ -167,7 +220,7 @@ const styles = StyleSheet.create({
   overlay:  { flex: 1, justifyContent: "flex-end" },
   backdrop: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.45)" },
   sheet: {
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#d1d5db",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: SCREEN_H * 0.88,
@@ -211,7 +264,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 5,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    borderBottomColor: "#d1d5db",
   },
   rowLabel:   { fontSize: 13, fontFamily: "IBMPlexSans_400Regular", color: "#6b7280", flex: 1 },
   rowValue:   { fontSize: 13, color: "#111827", fontWeight: "500", fontFamily: "IBMPlexSans_500Medium", flex: 2, textAlign: "right" },
@@ -224,6 +277,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e5e7eb",
   },
-  partTitle: { fontSize: 13, fontWeight: "700", fontFamily: "IBMPlexSans_700Bold", color: "#0f3460", marginBottom: 2 },
-  partDesc:  { fontSize: 12, fontFamily: "IBMPlexSans_400Regular", color: "#6b7280", marginBottom: 6 },
+  partCardCancelled: {
+    backgroundColor: "#f3f4f6",
+    borderColor: "#d1d5db",
+    opacity: 0.7,
+  },
+  partTitle:          { fontSize: 13, fontWeight: "700", fontFamily: "IBMPlexSans_700Bold", color: "#0f3460", marginBottom: 2 },
+  partTitleCancelled: { color: "#9ca3af" },
+  partDesc:           { fontSize: 12, fontFamily: "IBMPlexSans_400Regular", color: "#6b7280", marginBottom: 6 },
+  partDescCancelled:  { color: "#9ca3af" },
+  cancelledText:      { color: "#9ca3af" },
 });

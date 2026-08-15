@@ -78,19 +78,18 @@ function HistoryCard({ wo, onPress }: { wo: HistoryWO; onPress: () => void }) {
           {wo.case_desc || "No description"}
         </Text>
 
-        {/* Meta row */}
-        <View style={styles.metaRow}>
-          {wo.contact_name ? (
-            <Text style={styles.metaText} numberOfLines={1}>👤 {wo.contact_name}</Text>
-          ) : null}
-          {wo.serial_number ? (
-            <Text style={styles.metaText} numberOfLines={1}>🔖 {wo.serial_number}</Text>
-          ) : null}
-        </View>
+        {/* Serial number */}
+        {wo.serial_number ? (
+          <Text style={styles.metaText} numberOfLines={1}>🔖 {wo.serial_number}</Text>
+        ) : null}
 
-        {/* Dates footer */}
+        {/* Bottom row: technician name (left) + Closed date (right) */}
         <View style={styles.datesRow}>
-          <Text style={styles.dateText}>Created: {(wo.created_on || "—").slice(0, 10)}</Text>
+          {wo.tech_name ? (
+            <Text style={styles.techName}>🧑🏻‍🔧 {wo.tech_name}</Text>
+          ) : (
+            <Text style={styles.techUnassigned}>⏱ <Text style={styles.techUnassignedText}>Teknisi belum diassign</Text></Text>
+          )}
           <Text style={styles.dateText}>Closed: {closed || "—"}</Text>
         </View>
       </View>
@@ -236,7 +235,7 @@ export default function HistoryScreen() {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#f3f4f6" },
+  root: { flex: 1, backgroundColor: "#d1d5db" },
 
   // Header
   header: {
@@ -294,7 +293,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#e5e7eb",
   },
   searchInput: {
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#d1d5db",
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 9,
@@ -308,7 +307,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#d1d5db",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderBottomWidth: 1,
@@ -376,10 +375,12 @@ const styles = StyleSheet.create({
   },
   statusBadgeText: { fontSize: 10, fontWeight: "700", fontFamily: "IBMPlexSans_700Bold", color: "#16a34a" },
   caseDesc: { fontSize: 13, fontFamily: "IBMPlexSans_400Regular", color: "#374151", marginBottom: 4, lineHeight: 18 },
-  metaRow:  { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 4 },
-  metaText: { fontSize: 12, fontFamily: "IBMPlexSans_400Regular", color: "#6b7280", flexShrink: 1 },
-  datesRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 4 },
-  dateText: { fontSize: 11, fontFamily: "IBMPlexSans_400Regular", color: "#9ca3af" },
+  metaText:           { fontSize: 12, fontFamily: "IBMPlexSans_400Regular", color: "#6b7280", marginBottom: 4 },
+  datesRow:           { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 6 },
+  techName:           { fontSize: 13, fontFamily: "IBMPlexSans_600SemiBold", color: "#374151", flex: 1, marginRight: 8 },
+  techUnassigned:     { fontSize: 12, fontFamily: "IBMPlexSans_400Regular", color: "#9ca3af", flex: 1, marginRight: 8 },
+  techUnassignedText: { fontStyle: "italic" },
+  dateText:           { fontSize: 11, fontFamily: "IBMPlexSans_400Regular", color: "#9ca3af" },
 
   // States
   centerBox:   { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },

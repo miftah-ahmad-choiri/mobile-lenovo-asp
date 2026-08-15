@@ -71,6 +71,7 @@ export default function CCIScreen() {
         key={tab}
         endpoint="/api/v1/mobile/cci-followup"
         extraParams={{ followup_state: tab }}
+        accentColor={HEADER_BG}
         emptyText={
           tab === "in_transit"
             ? "No CCI work orders currently in transit."
@@ -82,7 +83,7 @@ export default function CCIScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#f3f4f6" },
+  root: { flex: 1, backgroundColor: "#d1d5db" },
 
   header: {
     backgroundColor: HEADER_BG,

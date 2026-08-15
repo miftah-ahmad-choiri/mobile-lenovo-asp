@@ -1,7 +1,7 @@
 // app/login.tsx
 // Login screen — posts credentials to /api/v1/auth/login, stores JWT.
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -19,14 +19,18 @@ import api from "../services/api";
 import { useAuthStore } from "../stores/authStore";
 
 export default function LoginScreen() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { setUser } = useAuthStore();
+  const [username, setUsername]   = useState("");
+  const [password, setPassword]   = useState("");
+  const [loading, setLoading]     = useState(false);
+  const [errorMsg, setErrorMsg]   = useState<string | null>(null);
+  const [showPass, setShowPass]   = useState(false);
+  const passwordRef               = useRef<TextInput>(null);
+  const { setUser }               = useAuthStore();
 
   const handleLogin = async () => {
+    setErrorMsg(null);
     if (!username.trim() || !password.trim()) {
-      Alert.alert("Required", "Please enter your username and password.");
+      setErrorMsg("Please enter your email and password.");
       return;
     }
     setLoading(true);
@@ -36,15 +40,23 @@ export default function LoginScreen() {
         password: password.trim(),
       });
       await setUser(res.data);
-      router.replace("/(tabs)/followup/in-prepare");
+      router.replace("/(tabs)/home");
     } catch (err: any) {
       const msg =
         err?.response?.data?.error ||
         "Login failed. Check your credentials and try again.";
-      Alert.alert("Login Failed", msg);
+      setErrorMsg(msg);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgotPassword = () => {
+    Alert.alert(
+      "Forgot Password?",
+      "Please contact your ASP administrator to reset your password. They can update it from the ASP portal under Staff Management.",
+      [{ text: "OK" }]
+    );
   };
 
   return (
@@ -67,30 +79,48 @@ export default function LoginScreen() {
 
         {/* Form */}
         <View style={styles.form}>
-          <Text style={styles.label}>Username / Email</Text>
+          <Text style={styles.label}>Email</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, errorMsg ? styles.inputError : null]}
             value={username}
-            onChangeText={setUsername}
-            placeholder="e.g. miftah.choiri@ibm.com"
+            onChangeText={(v) => { setUsername(v); setErrorMsg(null); }}
+            placeholder="e.g. technician@asp.com"
             placeholderTextColor="#9ca3af"
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
             returnKeyType="next"
+            onSubmitEditing={() => passwordRef.current?.focus()}
           />
 
           <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Enter your password"
-            placeholderTextColor="#9ca3af"
-            secureTextEntry
-            returnKeyType="done"
-            onSubmitEditing={handleLogin}
-          />
+          <View style={styles.passwordRow}>
+            <TextInput
+              ref={passwordRef}
+              style={[styles.input, styles.passwordInput, errorMsg ? styles.inputError : null]}
+              value={password}
+              onChangeText={(v) => { setPassword(v); setErrorMsg(null); }}
+              placeholder="Enter your password"
+              placeholderTextColor="#9ca3af"
+              secureTextEntry={!showPass}
+              returnKeyType="done"
+              onSubmitEditing={handleLogin}
+            />
+            <TouchableOpacity
+              style={styles.eyeBtn}
+              onPress={() => setShowPass((p) => !p)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.eyeText}>{showPass ? "🔒" : "🔓"}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Inline error message */}
+          {errorMsg ? (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>⚠️  {errorMsg}</Text>
+            </View>
+          ) : null}
 
           <TouchableOpacity
             style={[styles.btn, loading && styles.btnDisabled]}
@@ -103,6 +133,15 @@ export default function LoginScreen() {
             ) : (
               <Text style={styles.btnText}>Sign In</Text>
             )}
+          </TouchableOpacity>
+
+          {/* Forgot password */}
+          <TouchableOpacity
+            style={styles.forgotBtn}
+            onPress={handleForgotPassword}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.forgotText}>Forgot Password?</Text>
           </TouchableOpacity>
         </View>
 
@@ -130,9 +169,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 16,
   },
-  logoText: { fontSize: 36, fontWeight: "900", fontFamily: "IBMPlexSans_700Bold", color: "#fff" },
-  title: { fontSize: 26, fontWeight: "700", fontFamily: "IBMPlexSans_700Bold", color: "#fff", letterSpacing: 0.5 },
-  subtitle: { fontSize: 14, fontFamily: "IBMPlexSans_400Regular", color: "#93c5fd", marginTop: 4 },
+  logoText:  { fontSize: 36, fontWeight: "900", fontFamily: "IBMPlexSans_700Bold", color: "#fff" },
+  title:     { fontSize: 26, fontWeight: "700", fontFamily: "IBMPlexSans_700Bold", color: "#fff", letterSpacing: 0.5 },
+  subtitle:  { fontSize: 14, fontFamily: "IBMPlexSans_400Regular", color: "#93c5fd", marginTop: 4 },
   form: {
     backgroundColor: "#fff",
     borderRadius: 16,
@@ -142,7 +181,13 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
-  label: { fontSize: 13, fontWeight: "600", fontFamily: "IBMPlexSans_600SemiBold", color: "#374151", marginBottom: 6 },
+  label: {
+    fontSize: 13,
+    fontWeight: "600",
+    fontFamily: "IBMPlexSans_600SemiBold",
+    color: "#374151",
+    marginBottom: 6,
+  },
   input: {
     borderWidth: 1,
     borderColor: "#d1d5db",
@@ -155,15 +200,60 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     backgroundColor: "#f9fafb",
   },
+  inputError: {
+    borderColor: "#ef4444",
+    backgroundColor: "#fef2f2",
+  },
+  passwordRow: {
+    position: "relative",
+    marginBottom: 0,
+  },
+  passwordInput: {
+    paddingRight: 48,
+    marginBottom: 0,
+  },
+  eyeBtn: {
+    position: "absolute",
+    right: 12,
+    top: 12,
+    padding: 2,
+  },
+  eyeText: { fontSize: 18 },
+  errorBox: {
+    backgroundColor: "#fef2f2",
+    borderWidth: 1,
+    borderColor: "#fca5a5",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  errorText: {
+    fontSize: 13,
+    fontFamily: "IBMPlexSans_400Regular",
+    color: "#dc2626",
+    lineHeight: 18,
+  },
   btn: {
     backgroundColor: "#e8392e",
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: "center",
-    marginTop: 4,
+    marginTop: 16,
   },
   btnDisabled: { opacity: 0.6 },
   btnText: { color: "#fff", fontSize: 16, fontWeight: "700", fontFamily: "IBMPlexSans_700Bold" },
+  forgotBtn: {
+    alignItems: "center",
+    paddingVertical: 12,
+    marginTop: 4,
+  },
+  forgotText: {
+    fontSize: 13,
+    fontFamily: "IBMPlexSans_400Regular",
+    color: "#3b82f6",
+  },
   footer: {
     textAlign: "center",
     color: "#93c5fd",

@@ -19,20 +19,6 @@ const MENUS: {
   statsKey: string;
 }[] = [
   {
-    title:   "CCI Follow-Up",
-    emoji:   "🏪",
-    bgColor: "#f5f3ff",
-    route:   "/(tabs)/cci",
-    statsKey: "cci_followup_total",
-  },
-  {
-    title:   "ONS Follow-Up",
-    emoji:   "🏡",
-    bgColor: "#fef2f2",
-    route:   "/(tabs)/onsite",
-    statsKey: "onsite_followup_total",
-  },
-  {
     title:   "In-Prepare",
     emoji:   "📋",
     bgColor: "#fef2f2",
@@ -45,6 +31,20 @@ const MENUS: {
     bgColor: "#fffbeb",
     route:   "/(tabs)/in-return",
     statsKey: "in_return_total",
+  },
+  {
+    title:   "CCI Follow-Up",
+    emoji:   "🏪",
+    bgColor: "#f5f3ff",
+    route:   "/(tabs)/cci",
+    statsKey: "cci_followup_total",
+  },
+  {
+    title:   "ONS Follow-Up",
+    emoji:   "🏡",
+    bgColor: "#fef2f2",
+    route:   "/(tabs)/onsite",
+    statsKey: "onsite_followup_total",
   },
 ];
 
@@ -130,7 +130,7 @@ export default function HomeScreen() {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  root:   { flex: 1, backgroundColor: "#f3f4f6" },
+  root:   { flex: 1, backgroundColor: "#d1d5db" },
 
   // Header
   header: {

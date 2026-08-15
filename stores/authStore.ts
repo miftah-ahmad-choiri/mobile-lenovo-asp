@@ -56,7 +56,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUser: async (user) => {
     await saveItem("jwt_token", user.token);
     await saveItem("auth_user", JSON.stringify(user));
-    set({ user });
+    set({ user, isLoading: false });
   },
 
   loadUser: async () => {

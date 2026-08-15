@@ -21,9 +21,10 @@ interface Props {
   endpoint: string;
   extraParams?: Record<string, string>;
   emptyText?: string;
+  accentColor?: string;
 }
 
-export function WOScreen({ endpoint, extraParams = {}, emptyText }: Props) {
+export function WOScreen({ endpoint, extraParams = {}, emptyText, accentColor }: Props) {
   const {
     rows, total, loading, refreshing, error, search,
     fetch, refresh, loadMore, onSearch,
@@ -87,7 +88,7 @@ export function WOScreen({ endpoint, extraParams = {}, emptyText }: Props) {
         data={rows}
         keyExtractor={(item) => String(item.work_order_id)}
         renderItem={({ item }) => (
-          <WOListItem wo={item} onPress={() => openDetail(item.work_order_id)} />
+          <WOListItem wo={item} onPress={() => openDetail(item.work_order_id)} accentColor={accentColor} />
         )}
         onEndReached={loadMore}
         onEndReachedThreshold={0.3}
@@ -117,9 +118,9 @@ export function WOScreen({ endpoint, extraParams = {}, emptyText }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container:   { flex: 1, backgroundColor: "#f3f4f6" },
+  container:   { flex: 1, backgroundColor: "#d1d5db" },
   searchBox:   { backgroundColor: "#fff", paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#e5e7eb" },
-  searchInput: { backgroundColor: "#f3f4f6", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9, fontSize: 14, fontFamily: "IBMPlexSans_400Regular", color: "#111827" },
+  searchInput: { backgroundColor: "#d1d5db", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9, fontSize: 14, fontFamily: "IBMPlexSans_400Regular", color: "#111827" },
   countText:   { fontSize: 12, fontFamily: "IBMPlexSans_400Regular", color: "#6b7280", paddingHorizontal: 16, paddingVertical: 6 },
   centerBox:   { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
   errorText:   { color: "#dc2626", fontFamily: "IBMPlexSans_400Regular", textAlign: "center", marginBottom: 12 },

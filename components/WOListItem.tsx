@@ -35,6 +35,7 @@ interface Props {
     work_order_status?: string;
     case_desc?: string;
     contact_name?: string;
+    tech_name?: string;
     customer?: string;
     created_on?: string;
     committed_delivery_date?: string;
@@ -47,20 +48,20 @@ interface Props {
     no_part_lines?: number;
   };
   onPress: () => void;
+  accentColor?: string;
 }
 
-export function WOListItem({ wo, onPress }: Props) {
+export function WOListItem({ wo, onPress, accentColor = "#0f3460" }: Props) {
   const state      = wo.followup_state || "in_prepare";
   const stateColor = STATE_COLORS[state] || "#6b7280";
   const stateLabel = STATE_LABELS[state] || state;
   const typeTag    = wo.work_order_type?.toUpperCase().includes("ONSITE") ? "ONS" : "CCI";
   const typeColor  = typeTag === "ONS" ? "#d97706" : "#2563ab";
 
-  const created = wo.created_on ? wo.created_on.slice(0, 10) : "—";
-  const eta     = wo.committed_delivery_date ? wo.committed_delivery_date.slice(0, 10) : "—";
+  const eta = wo.committed_delivery_date ? wo.committed_delivery_date.slice(0, 10) : "—";
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
+    <TouchableOpacity style={[styles.card, { borderLeftColor: accentColor }]} onPress={onPress} activeOpacity={0.75}>
       {/* Top row: WO number + type tag + state badge */}
       <View style={styles.topRow}>
         <Text style={styles.woNum}>#{wo.work_order_id}</Text>
@@ -77,21 +78,13 @@ export function WOListItem({ wo, onPress }: Props) {
         {wo.case_desc || "No description"}
       </Text>
 
-      {/* Contact + customer */}
-      {wo.contact_name ? (
-        <Text style={styles.meta}>👤 {wo.contact_name}</Text>
-      ) : null}
-
-      {/* Part info (in-prepare) */}
-      {wo.part_product || wo.part_description ? (
-        <Text style={styles.meta} numberOfLines={1}>
-          🔧 {wo.part_product} — {wo.part_description}
-        </Text>
-      ) : null}
-
-      {/* Dates row */}
+      {/* Bottom row: technician name (left) + ETA (right) */}
       <View style={styles.datesRow}>
-        <Text style={styles.dateText}>Created: {created}</Text>
+        {wo.tech_name ? (
+          <Text style={styles.techName}>🧑🏻‍🔧 {wo.tech_name}</Text>
+        ) : (
+          <Text style={styles.techUnassigned}>⏱ <Text style={styles.techUnassignedText}>Teknisi belum diassign</Text></Text>
+        )}
         <Text style={styles.dateText}>ETA: {eta}</Text>
       </View>
     </TouchableOpacity>
@@ -136,6 +129,9 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 10, fontWeight: "700", fontFamily: "IBMPlexSans_700Bold" },
   caseDesc: { fontSize: 13, fontFamily: "IBMPlexSans_400Regular", color: "#374151", marginBottom: 4 },
   meta:     { fontSize: 12, fontFamily: "IBMPlexSans_400Regular", color: "#6b7280", marginBottom: 2 },
-  datesRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 6 },
+  datesRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 },
+  techName:       { fontSize: 13, fontFamily: "IBMPlexSans_600SemiBold", color: "#374151", flex: 1, marginRight: 8 },
+  techUnassigned:     { fontSize: 12, fontFamily: "IBMPlexSans_400Regular", color: "#9ca3af", flex: 1, marginRight: 8 },
+  techUnassignedText: { fontStyle: "italic" },
   dateText: { fontSize: 11, fontFamily: "IBMPlexSans_400Regular", color: "#9ca3af" },
 });

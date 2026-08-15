@@ -19,12 +19,16 @@ function ReturnPartBanner() {
   );
 }
 
+const ACCENT = "#7c3aed";
+
 export default function InReturnScreen() {
   return (
     <View style={{ flex: 1 }}>
       <ReturnPartBanner />
       <WOScreen
         endpoint="/api/v1/mobile/return-part"
+        extraParams={{ followup_state: "need_to_return" }}
+        accentColor={ACCENT}
         emptyText="No Return Part work orders for your ASP."
       />
     </View>

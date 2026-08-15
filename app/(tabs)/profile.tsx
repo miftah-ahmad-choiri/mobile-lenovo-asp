@@ -122,7 +122,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  root:   { flex: 1, backgroundColor: "#f3f4f6" },
+  root:   { flex: 1, backgroundColor: "#d1d5db" },
 
   // Header
   header: {
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   // Info card
   card:      { backgroundColor: "#fff", borderRadius: 12, padding: 16, marginBottom: 16, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
   cardTitle: { fontSize: 12, fontWeight: "700", fontFamily: "IBMPlexSans_700Bold", color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 10 },
-  infoRow:   { flexDirection: "row", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#f3f4f6" },
+  infoRow:   { flexDirection: "row", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#d1d5db" },
   infoLabel: { fontSize: 13, fontFamily: "IBMPlexSans_400Regular", color: "#6b7280", flex: 1 },
   infoValue: { fontSize: 13, color: "#111827", fontWeight: "500", fontFamily: "IBMPlexSans_500Medium", flex: 2, textAlign: "right" },
 

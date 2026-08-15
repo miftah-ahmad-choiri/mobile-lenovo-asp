@@ -77,6 +77,7 @@ export default function OnsiteScreen() {
         key={tab}
         endpoint="/api/v1/mobile/onsite-followup"
         extraParams={{ followup_state: ONS_STATE_MAP[tab] }}
+        accentColor={HEADER_BG}
         emptyText={
           tab === "in_transit"
             ? "No ONS work orders currently in transit."
@@ -88,7 +89,7 @@ export default function OnsiteScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#f3f4f6" },
+  root: { flex: 1, backgroundColor: "#d1d5db" },
 
   header: {
     backgroundColor: HEADER_BG,

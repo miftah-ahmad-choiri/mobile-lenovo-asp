@@ -10,6 +10,7 @@ export interface HistoryWO {
   work_order_status?: string;
   case_desc?: string;
   contact_name?: string;
+  tech_name?: string;
   customer?: string;
   serial_number?: string;
   product_description?: string;

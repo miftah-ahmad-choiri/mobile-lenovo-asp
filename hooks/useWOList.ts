@@ -11,6 +11,7 @@ export interface WORow {
   work_order_status?: string;
   case_desc?: string;
   contact_name?: string;
+  tech_name?: string;
   customer?: string;
   created_on?: string;
   committed_delivery_date?: string;

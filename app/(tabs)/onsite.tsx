@@ -8,6 +8,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStats } from "../../hooks/useStats";
 import { WOScreen } from "../../components/WOScreen";
+import { SetOnsScheduleModal } from "../../components/SetOnsScheduleModal";
 
 const HEADER_BG = "#0d9488";
 const ACTIVE    = "#ffffff";
@@ -31,8 +32,27 @@ export default function OnsiteScreen() {
   const { stats, refetch }  = useStats();
   const [tab, setTab]       = useState<SubTab>("in_transit");
 
+  // Set ONS Schedule modal state
+  const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
+  const [scheduleWO, setScheduleWO]                     = useState<any>(null);
+
   // Fetch stats if not yet loaded (e.g. navigated here before visiting Home)
   useEffect(() => { if (!stats) refetch(); }, []);
+
+  const handleSchedule = (wo: any) => {
+    setScheduleWO(wo);
+    setScheduleModalVisible(true);
+  };
+
+  const handleEscalate = (wo: any) => {
+    // Escalate handler — placeholder until escalate modal is wired up
+    import("react-native").then(({ Alert }) =>
+      Alert.alert("Escalate", `Escalate WO #${wo.work_order_id}?`, [
+        { text: "Cancel", style: "cancel" },
+        { text: "Escalate", style: "destructive" },
+      ])
+    );
+  };
 
   return (
     <View style={styles.root}>
@@ -83,6 +103,16 @@ export default function OnsiteScreen() {
             ? "No ONS work orders currently in transit."
             : "No ONS work orders currently in repair."
         }
+        onSchedule={handleSchedule}
+        onEscalate={handleEscalate}
+      />
+
+      {/* ── Set ONS Schedule Modal ── */}
+      <SetOnsScheduleModal
+        visible={scheduleModalVisible}
+        wo={scheduleWO}
+        onClose={() => setScheduleModalVisible(false)}
+        onSuccess={() => setScheduleModalVisible(false)}
       />
     </View>
   );

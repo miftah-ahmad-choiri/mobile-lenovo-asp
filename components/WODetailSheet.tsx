@@ -2,7 +2,7 @@
 // Bottom sheet showing full WO details when a list row is tapped.
 // Pure React Native Modal — no extra library needed.
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Modal,
   View,
@@ -29,6 +29,12 @@ function statusPillColors(status: string): { bg: string; text: string; border: s
   return { bg: "#f3f4f6", text: "#374151", border: "#d1d5db" };
 }
 
+// Returns the left-border accent colour for part cards
+function partBorderColor(status: string): string {
+  const { text } = statusPillColors(status);
+  return text;
+}
+
 function StatusPill({ value }: { value: string }) {
   const { bg, text, border } = statusPillColors(value);
   return (
@@ -41,12 +47,12 @@ function StatusPill({ value }: { value: string }) {
 const pillStyles = StyleSheet.create({
   pill: {
     borderWidth: 1,
-    borderRadius: 6,
+    borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 3,
     alignSelf: "flex-end",
   },
-  text: { fontSize: 12, fontWeight: "700", fontFamily: "IBMPlexSans_700Bold" },
+  text: { fontSize: 11, fontWeight: "700", fontFamily: "IBMPlexSans_700Bold", letterSpacing: 0.3 },
 });
 
 const SCREEN_H = Dimensions.get("window").height;
@@ -79,6 +85,8 @@ interface WO {
   product_description?: string;
   product_id_mtm?: string;
   city?: string;
+  company_name?: string;
+  address?: string;
   mobile_phone?: string;
   primary_email?: string;
   completion_date?: string;
@@ -91,13 +99,27 @@ interface Props {
   wo: WO | null;
   parts: Part[];
   onClose: () => void;
+  onInputDC?: (part: Part) => void;
+  onConfirmAWB?: (part: Part) => void;
+  onSchedule?: (wo: WO) => void;
+  onEscalate?: (wo: WO) => void;
 }
 
-function Row({ label, value, phone }: { label: string; value?: string | number | null; phone?: boolean }) {
+function Row({
+  label,
+  value,
+  phone,
+  last,
+}: {
+  label: string;
+  value?: string | number | null;
+  phone?: boolean;
+  last?: boolean;
+}) {
   if (!value && value !== 0) return null;
   const strVal = String(value);
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, last && styles.rowLast]}>
       <Text style={styles.rowLabel}>{label}</Text>
       {phone ? (
         <TouchableOpacity onPress={() => Linking.openURL(`tel:${strVal}`)} activeOpacity={0.7}>
@@ -110,16 +132,104 @@ function Row({ label, value, phone }: { label: string; value?: string | number |
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  accentColor = "#0f3460",
+  children,
+}: {
+  title: string;
+  accentColor?: string;
+  children: React.ReactNode;
+}) {
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.sectionTitleRow}>
+        <View style={[styles.sectionAccentBar, { backgroundColor: accentColor }]} />
+        <Text style={[styles.sectionTitle, { color: accentColor }]}>{title}</Text>
+      </View>
       {children}
     </View>
   );
 }
 
-export function WODetailSheet({ visible, wo, parts, onClose }: Props) {
+// ── PartItem — measures its own height so the action button is always square ──
+function PartItem({
+  p,
+  onInputDC,
+  onConfirmAWB,
+}: {
+  p: Part;
+  onInputDC?: (part: Part) => void;
+  onConfirmAWB?: (part: Part) => void;
+}) {
+  const isCancelled = (p.wo_product_status || "").toLowerCase().includes("cancel");
+  const accentBorder = p.wo_product_status ? partBorderColor(p.wo_product_status) : "#d1d5db";
+  const hasAction = !isCancelled && (onInputDC || onConfirmAWB);
+
+  const [btnSize, setBtnSize] = useState<number>(0);
+
+  return (
+    <View style={styles.partRow}>
+      {/* Card — reports its height so button can match */}
+      <View
+        style={[
+          styles.partCard,
+          { borderLeftColor: accentBorder },
+          isCancelled && styles.partCardCancelled,
+        ]}
+        onLayout={hasAction ? (e) => setBtnSize(e.nativeEvent.layout.height) : undefined}
+      >
+        <View style={styles.partHeaderRow}>
+          <Text style={[styles.partTitle, isCancelled && styles.partTitleCancelled]}>
+            {p.soid}
+          </Text>
+          {p.wo_product_status ? <StatusPill value={p.wo_product_status} /> : null}
+        </View>
+        <Text style={[styles.partSoid, isCancelled && styles.cancelledText]}>
+          {p.product ? `Product ID: ${p.product}` : "—"}
+        </Text>
+        {p.description ? (
+          <Text style={[styles.partDesc, isCancelled && styles.partDescCancelled]} numberOfLines={1} ellipsizeMode="tail">
+            {p.description}
+          </Text>
+        ) : null}
+        {!isCancelled && (
+          <View style={styles.partMeta}>
+            <Row label="AWB"      value={p.awb} />
+            <Row label="POD Date" value={p.ship_pou_pod_time?.slice(0, 10)} />
+            <Row label="DC#"      value={p.dc_number} />
+            <Row label="Return"   value={p.return_flag} last />
+          </View>
+        )}
+      </View>
+
+      {/* Action button — square: width = measured card height */}
+      {!isCancelled && onInputDC ? (
+        <TouchableOpacity
+          style={[styles.inputDCBtn, btnSize > 0 && { width: btnSize }]}
+          onPress={() => onInputDC(p)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.inputDCBtnText}>Input DC</Text>
+          <Text style={styles.actionBtnChevron}>⏷</Text>
+        </TouchableOpacity>
+      ) : null}
+      {!isCancelled && onConfirmAWB ? (
+        <TouchableOpacity
+          style={[styles.confirmAWBBtn, btnSize > 0 && { width: btnSize }]}
+          onPress={() => onConfirmAWB(p)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.confirmAWBBtnText}>Confirm{"\n"}AWB</Text>
+          <Text style={styles.actionBtnChevron}>⏷</Text>
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
+}
+
+
+export function WODetailSheet({ visible, wo, parts, onClose, onInputDC, onConfirmAWB, onSchedule, onEscalate }: Props) {
   if (!wo) return null;
 
   return (
@@ -133,14 +243,24 @@ export function WODetailSheet({ visible, wo, parts, onClose }: Props) {
         <TouchableOpacity style={styles.backdrop} onPress={onClose} />
         <View style={styles.sheet}>
           {/* Handle bar */}
-          <View style={styles.handle} />
+          <View style={styles.handleWrap}>
+            <View style={styles.handle} />
+          </View>
 
           {/* Header */}
           <View style={styles.sheetHeader}>
-            <Text style={styles.woId}>WO #{wo.work_order_id}</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Text style={styles.closeBtnText}>✕</Text>
-            </TouchableOpacity>
+            <View style={styles.sheetHeaderLeft}>
+              <Text style={styles.woId}>WO #{wo.work_order_id}</Text>
+              {wo.work_order_type ? (
+                <Text style={styles.woSubtitle}>{wo.work_order_type}</Text>
+              ) : null}
+            </View>
+            <View style={styles.sheetHeaderRight}>
+              {wo.work_order_status ? <StatusPill value={wo.work_order_status} /> : null}
+              <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={styles.closeBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <ScrollView
@@ -148,68 +268,83 @@ export function WODetailSheet({ visible, wo, parts, onClose }: Props) {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            <Section title="Work Order">
-              {wo.work_order_status ? (
-                <View style={styles.row}>
-                  <Text style={styles.rowLabel}>Status</Text>
-                  <StatusPill value={wo.work_order_status} />
-                </View>
-              ) : null}
-              <Row label="Type"        value={wo.work_order_type} />
+            {/* ── Work Order ── */}
+            <Section title="Work Order" accentColor="#0f3460">
               <Row label="Case"        value={wo.case_desc} />
-              <Row label="Case Status" value={wo.case_status} />
               <Row label="Serial No."  value={wo.serial_number} />
               <Row label="Product"     value={wo.product_description} />
-              <Row label="MTM"         value={wo.product_id_mtm} />
+              <Row label="MTM"         value={wo.product_id_mtm} last />
             </Section>
 
-            <Section title="Schedule">
-              <Row label="Created"          value={wo.created_on?.slice(0, 10)} />
-              <Row label="Committed ETA"    value={wo.committed_delivery_date?.slice(0, 10)} />
-              <Row label="Onsite Date"      value={wo.actual_committed_onsite_date?.slice(0, 10)} />
-              <Row label="Completion Date"  value={wo.completion_date?.slice(0, 10)} />
-              <Row label="Closing Date"     value={wo.closing_date?.slice(0, 10)} />
+            {/* ── Schedule ── */}
+            <Section title="Schedule" accentColor="#0d9488">
+              <Row label="Created"         value={wo.created_on?.slice(0, 10)} />
+              <Row label="Committed ETA"   value={wo.committed_delivery_date?.slice(0, 10)} />
+              <Row label="Onsite Date"     value={wo.actual_committed_onsite_date?.slice(0, 10)} />
+              <Row label="Completion Date" value={wo.completion_date?.slice(0, 10)} />
+              <Row label="Closing Date"    value={wo.closing_date?.slice(0, 10)} last />
             </Section>
 
-            <Section title="Customer">
-              <Row label="Contact"  value={wo.contact_name} />
-              <Row label="City"     value={wo.city} />
-              <Row label="Phone"    value={wo.mobile_phone} phone />
-              <Row label="Email"    value={wo.primary_email} />
+            {/* ── Customer ── */}
+            <Section title="Customer" accentColor="#7c3aed">
+              <Row label="Contact" value={wo.contact_name} />
+              <Row
+                label="Address"
+                value={(() => {
+                  const parts: string[] = [];
+                  if (wo.company_name?.trim()) parts.push(wo.company_name.trim());
+                  if (wo.address?.trim())      parts.push(wo.address.trim().replace(/[\r\n]+/g, " "));
+                  return parts.length ? parts.join(", ") : (wo.city ?? null);
+                })()}
+              />
+              <Row label="Phone"   value={wo.mobile_phone} phone />
+              <Row label="Email"   value={wo.primary_email} last />
             </Section>
 
+            {/* ── Parts ── */}
             {parts.length > 0 && (
-              <Section title={`Parts (${parts.length})`}>
+              <Section title={`Parts (${parts.length})`} accentColor="#b45309">
                 {[...parts]
                   .sort((a, b) => {
                     const aCancelled = (a.wo_product_status || "").toLowerCase().includes("cancel");
                     const bCancelled = (b.wo_product_status || "").toLowerCase().includes("cancel");
                     return (aCancelled ? 1 : 0) - (bCancelled ? 1 : 0);
                   })
-                  .map((p, i) => {
-                    const isCancelled = (p.wo_product_status || "").toLowerCase().includes("cancel");
-                    return (
-                      <View key={p.soid ?? i} style={[styles.partCard, isCancelled && styles.partCardCancelled]}>
-                        <Text style={[styles.partTitle, isCancelled && styles.partTitleCancelled]}>
-                          SOID {p.soid} — {p.product || "—"}
-                        </Text>
-                        <Text style={[styles.partDesc, isCancelled && styles.partDescCancelled]}>{p.description || "—"}</Text>
-                        {p.wo_product_status ? (
-                          <View style={styles.row}>
-                            <Text style={[styles.rowLabel, isCancelled && styles.cancelledText]}>Status</Text>
-                            <StatusPill value={p.wo_product_status} />
-                          </View>
-                        ) : null}
-                        {!isCancelled && <Row label="AWB"      value={p.awb} />}
-                        {!isCancelled && <Row label="POD Date" value={p.ship_pou_pod_time?.slice(0, 10)} />}
-                        {!isCancelled && <Row label="DC#"      value={p.dc_number} />}
-                        {!isCancelled && <Row label="Return"   value={p.return_flag} />}
-                      </View>
-                    );
-                  })}
+                  .map((p, i) => (
+                    <PartItem
+                      key={p.soid ?? i}
+                      p={p}
+                      onInputDC={onInputDC}
+                      onConfirmAWB={onConfirmAWB}
+                    />
+                  ))}
               </Section>
             )}
           </ScrollView>
+
+          {/* ── ONS Action Footer ── */}
+          {(onSchedule || onEscalate) ? (
+            <View style={styles.actionFooter}>
+              {onSchedule ? (
+                <TouchableOpacity
+                  style={styles.scheduleBtn}
+                  onPress={() => onSchedule(wo)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.scheduleBtnText}>🗓️  Jadwalkan Onsite</Text>
+                </TouchableOpacity>
+              ) : null}
+              {onEscalate ? (
+                <TouchableOpacity
+                  style={styles.escalateBtn}
+                  onPress={() => onEscalate(wo)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.escalateBtnText}>✆</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          ) : null}
         </View>
       </View>
     </Modal>
@@ -218,73 +353,252 @@ export function WODetailSheet({ visible, wo, parts, onClose }: Props) {
 
 const styles = StyleSheet.create({
   overlay:  { flex: 1, justifyContent: "flex-end" },
-  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.45)" },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.5)" },
+
   sheet: {
-    backgroundColor: "#d1d5db",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: "#f3f4f6",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     maxHeight: SCREEN_H * 0.88,
-    paddingBottom: 24,
+    overflow: "hidden",
+  },
+
+  handleWrap: {
+    alignItems: "center",
+    paddingTop: 10,
+    paddingBottom: 6,
+    backgroundColor: "#f3f4f6",
   },
   handle: {
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#d1d5db",
-    alignSelf: "center",
-    marginTop: 10,
-    marginBottom: 4,
+    backgroundColor: "#9ca3af",
   },
+
   sheetHeader: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-    backgroundColor: "#fff",
+    paddingVertical: 14,
+    backgroundColor: "#0f3460",
+    gap: 10,
   },
-  woId:       { fontSize: 18, fontWeight: "700", fontFamily: "IBMPlexSans_700Bold", color: "#0f3460", flex: 1 },
-  closeBtn:   { padding: 6 },
-  closeBtnText: { fontSize: 18, fontFamily: "IBMPlexSans_400Regular", color: "#6b7280" },
-  scroll:     { flexGrow: 0 },
-  scrollContent: { paddingBottom: 16 },
-  section:    { backgroundColor: "#fff", marginTop: 10, paddingHorizontal: 16, paddingVertical: 12 },
-  sectionTitle: {
-    fontSize: 12,
+  sheetHeaderLeft: { flex: 1 },
+  sheetHeaderRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  woId: {
+    fontSize: 19,
     fontWeight: "700",
     fontFamily: "IBMPlexSans_700Bold",
-    color: "#6b7280",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: 10,
+    color: "#ffffff",
   },
+  woSubtitle: {
+    fontSize: 12,
+    fontFamily: "IBMPlexSans_400Regular",
+    color: "rgba(255,255,255,0.65)",
+    marginTop: 2,
+  },
+  closeBtn:     { padding: 4 },
+  closeBtnText: { fontSize: 18, fontFamily: "IBMPlexSans_400Regular", color: "rgba(255,255,255,0.7)" },
+
+  scroll:        { flexGrow: 1 },
+  scrollContent: { paddingTop: 10, paddingBottom: 32 },
+
+  // ── Section ──
+  section: {
+    backgroundColor: "#ffffff",
+    marginHorizontal: 12,
+    marginBottom: 10,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 6,
+    // subtle shadow
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    gap: 8,
+  },
+  sectionAccentBar: {
+    width: 4,
+    height: 16,
+    borderRadius: 2,
+  },
+  sectionTitle: {
+    fontSize: 11,
+    fontWeight: "700",
+    fontFamily: "IBMPlexSans_700Bold",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+
+  // ── Row ──
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: "#d1d5db",
+    alignItems: "center",
+    paddingVertical: 7,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#e5e7eb",
   },
-  rowLabel:   { fontSize: 13, fontFamily: "IBMPlexSans_400Regular", color: "#6b7280", flex: 1 },
-  rowValue:   { fontSize: 13, color: "#111827", fontWeight: "500", fontFamily: "IBMPlexSans_500Medium", flex: 2, textAlign: "right" },
+  rowLast: {
+    borderBottomWidth: 0,
+  },
+  rowLabel: {
+    fontSize: 13,
+    fontFamily: "IBMPlexSans_400Regular",
+    color: "#6b7280",
+    flex: 1,
+  },
+  rowValue: {
+    fontSize: 13,
+    color: "#111827",
+    fontWeight: "500",
+    fontFamily: "IBMPlexSans_500Medium",
+    flex: 2,
+    textAlign: "right",
+  },
   phoneValue: { color: "#2563ab", textDecorationLine: "underline" },
+
+  // ── Part card ──
   partCard: {
+    flex: 1,
     backgroundColor: "#f9fafb",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 8,
+    borderRadius: 10,
+    padding: 12,
     borderWidth: 1,
+    borderLeftWidth: 4,
     borderColor: "#e5e7eb",
   },
   partCardCancelled: {
     backgroundColor: "#f3f4f6",
     borderColor: "#d1d5db",
-    opacity: 0.7,
+    opacity: 0.65,
   },
-  partTitle:          { fontSize: 13, fontWeight: "700", fontFamily: "IBMPlexSans_700Bold", color: "#0f3460", marginBottom: 2 },
+  partRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    marginBottom: 10,
+    gap: 8,
+  },
+  partHeaderRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 8,
+    marginBottom: 2,
+  },
+  partTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    fontFamily: "IBMPlexSans_700Bold",
+    color: "#0f3460",
+  },
   partTitleCancelled: { color: "#9ca3af" },
-  partDesc:           { fontSize: 12, fontFamily: "IBMPlexSans_400Regular", color: "#6b7280", marginBottom: 6 },
-  partDescCancelled:  { color: "#9ca3af" },
-  cancelledText:      { color: "#9ca3af" },
+  partSoid: {
+    fontSize: 11,
+    fontFamily: "IBMPlexSans_400Regular",
+    color: "#9ca3af",
+    marginTop: 1,
+  },
+  partDesc: {
+    fontSize: 12,
+    fontFamily: "IBMPlexSans_400Regular",
+    color: "#6b7280",
+    marginBottom: 6,
+    lineHeight: 17,
+  },
+  partDescCancelled: { color: "#9ca3af" },
+  partMeta: { marginTop: 6 },
+  cancelledText: { color: "#9ca3af" },
+
+  // ── ONS action footer ──
+  actionFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
+    backgroundColor: "#fff",
+  },
+  scheduleBtn: {
+    flex: 1,
+    backgroundColor: "#0d9488",
+    borderRadius: 10,
+    paddingVertical: 13,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scheduleBtnText: {
+    fontSize: 15,
+    fontWeight: "700",
+    fontFamily: "IBMPlexSans_700Bold",
+    color: "#ffffff",
+    letterSpacing: 0.3,
+  },
+  escalateBtn: {
+    width: 50,
+    height: 50,
+    borderRadius: 10,
+    backgroundColor: "#dc2626",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  escalateBtnText: {
+    fontSize: 24,
+    color: "#ffffff",
+  },
+
+  // ── Action buttons (compact square, right column) ──
+  inputDCBtn: {
+    backgroundColor: "#7c3aed",
+    borderRadius: 8,
+    width: 64,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  inputDCBtnText: {
+    fontSize: 11,
+    fontWeight: "700",
+    fontFamily: "IBMPlexSans_700Bold",
+    color: "#ffffff",
+    letterSpacing: 0.3,
+    textAlign: "center",
+    lineHeight: 15,
+  },
+  confirmAWBBtn: {
+    backgroundColor: "#0891b2",
+    borderRadius: 8,
+    width: 64,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  confirmAWBBtnText: {
+    fontSize: 11,
+    fontWeight: "700",
+    fontFamily: "IBMPlexSans_700Bold",
+    color: "#ffffff",
+    letterSpacing: 0.3,
+    textAlign: "center",
+    lineHeight: 15,
+  },
+  actionBtnChevron: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "rgba(255,255,255,0.85)",
+    lineHeight: 14,
+    marginTop: 4,
+  },
 });

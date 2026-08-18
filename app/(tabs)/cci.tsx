@@ -4,7 +4,7 @@
 //                     In-Repair  (part received, WO still open)
 
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStats } from "../../hooks/useStats";
 import { WOScreen } from "../../components/WOScreen";
@@ -27,6 +27,14 @@ export default function CCIScreen() {
 
   // Fetch stats if not yet loaded (e.g. navigated here before visiting Home)
   useEffect(() => { if (!stats) refetch(); }, []);
+
+  const handleConfirmAWB = (woId: number, part: any) => {
+    Alert.alert(
+      "Confirm AWB",
+      `WO #${woId} — SOID ${part.soid}\n${part.product || ""}`,
+      [{ text: "OK" }]
+    );
+  };
 
   return (
     <View style={styles.root}>
@@ -77,6 +85,7 @@ export default function CCIScreen() {
             ? "No CCI work orders currently in transit."
             : "No CCI work orders currently in repair."
         }
+        onConfirmAWB={handleConfirmAWB}
       />
     </View>
   );

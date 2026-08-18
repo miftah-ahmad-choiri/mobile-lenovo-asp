@@ -22,9 +22,13 @@ interface Props {
   extraParams?: Record<string, string>;
   emptyText?: string;
   accentColor?: string;
+  onInputDC?: (woId: number, part: any) => void;
+  onConfirmAWB?: (woId: number, part: any) => void;
+  onSchedule?: (wo: any) => void;
+  onEscalate?: (wo: any) => void;
 }
 
-export function WOScreen({ endpoint, extraParams = {}, emptyText, accentColor }: Props) {
+export function WOScreen({ endpoint, extraParams = {}, emptyText, accentColor, onInputDC, onConfirmAWB, onSchedule, onEscalate }: Props) {
   const {
     rows, total, loading, refreshing, error, search,
     fetch, refresh, loadMore, onSearch,
@@ -105,6 +109,14 @@ export function WOScreen({ endpoint, extraParams = {}, emptyText, accentColor }:
         wo={detailWO}
         parts={detailParts}
         onClose={closeDetail}
+        onInputDC={onInputDC && detailWO
+          ? (part) => onInputDC(detailWO.work_order_id, part)
+          : undefined}
+        onConfirmAWB={onConfirmAWB && detailWO
+          ? (part) => onConfirmAWB(detailWO.work_order_id, part)
+          : undefined}
+        onSchedule={onSchedule ?? undefined}
+        onEscalate={onEscalate ?? undefined}
       />
 
       {/* Detail loading overlay */}
